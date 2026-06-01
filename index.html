@@ -261,7 +261,7 @@
       <img class="logo-img" src="logo-cerdos.jpg" alt="Cerdos Logo">
 
       <h1>Cerdos App</h1>
-      <p class="subtitle">¿Eres un cerdo espectaculador?</p>
+      <p class="subtitle">¿Eres un cerdo especulador?</p>
 
       <!-- Connect button -->
       <button id="btnConnect" class="btn-connect" onclick="connectWallet()">
@@ -270,7 +270,7 @@
 
       <!-- Success result -->
       <div id="resultSuccess" class="result success">
-        <div class="result-title">✨ ¡Eres un cerdo espectaculador!</div>
+        <div class="result-title">✨ ¡Eres un cerdo especulador!</div>
         <div class="balance" id="balanceDisplay">0</div>
         <div class="balance-label">CERDOS</div>
         <div class="wallet-info">
@@ -282,7 +282,7 @@
 
       <!-- Fail result -->
       <div id="resultFail" class="result fail">
-        <div class="result-title">🐽 Todavía no eres un cerdo espectaculador</div>
+        <div class="result-title">🐽 Todavía no eres un cerdo especulador</div>
         <p style="color:#888;font-size:14px;margin-bottom:12px;">
           No tenés tokens CERDOS en esta wallet.
         </p>
@@ -436,7 +436,7 @@
       // Resetear mensaje de fail
       const failTitle = resultFail.querySelector('.result-title');
       const failMsg = resultFail.querySelector('p');
-      if (failTitle) failTitle.textContent = '🐽 Todavía no eres un cerdo espectaculador';
+      if (failTitle) failTitle.textContent = '🐽 Todavía no eres un cerdo especulador';
       if (failMsg) failMsg.textContent = 'No tenés tokens CERDOS en esta wallet.';
       const retryBtn = document.getElementById('retryBtn');
       if (retryBtn) retryBtn.style.display = 'none';
