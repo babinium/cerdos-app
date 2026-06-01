@@ -330,6 +330,7 @@
     const btnConnect = document.getElementById('btnConnect');
     const resultSuccess = document.getElementById('resultSuccess');
     const resultFail = document.getElementById('resultFail');
+    let currentProvider = null;
 
     // ─────────────── Get provider ───────────────
     function getProvider() {
@@ -352,7 +353,7 @@
           window.location.href = `https://phantom.app/ul/browse/${currentUrl}?ref=${currentUrl}`;
           return;
         }
-        alert('🦊 No se detectó Phantom ni Solflare.\n\nDesktop: instalá Phantom desde phantom.app\nMobile: abrí esta página desde el navegador de Phantom.');
+        alert('No se detectó Phantom ni Solflare.\n\nDesktop: instalá Phantom desde phantom.app\nMobile: abrí esta página desde el navegador de Phantom.');
         return;
       }
 
@@ -362,8 +363,8 @@
 
         const resp = await provider.connect();
         walletPublicKey = resp.publicKey.toString();
-        connection = await tryConnect();
-        await checkBalance();
+        currentProvider = provider;
+        await verifyBalance();
 
       } catch (err) {
         console.error('Error conectando:', err);
@@ -374,13 +375,17 @@
       }
     }
 
-    // ─────────────── Check balance ───────────────
-    async function checkBalance() {
+    // ─────────────── Verify balance ───────────────
+    async function verifyBalance() {
       try {
         btnConnect.innerHTML = '<span class="loading"></span>Verificando cerdos...';
 
         const mintPubkey = new solanaWeb3.PublicKey(CERDOS_MINT);
         const ownerPubkey = new solanaWeb3.PublicKey(walletPublicKey);
+
+        if (!connection) {
+          connection = await tryConnect();
+        }
 
         const tokenAccounts = await connection.getParsedTokenAccountsByOwner(
           ownerPubkey,
@@ -408,16 +413,36 @@
 
       } catch (err) {
         console.error('Error verificando balance:', err);
-        alert('Error al verificar el balance.\n\n' + err.message);
-        resetUI();
+        // Mostrar estado de error manteniendo wallet conectada
+        btnConnect.style.display = 'none';
+        resultSuccess.classList.remove('visible');
+        resultFail.classList.add('visible');
+        document.getElementById('walletDisplayFail').textContent = walletPublicKey;
+        // Cambiar mensaje de fail para indicar error de conexión
+        const failTitle = resultFail.querySelector('.result-title');
+        const failMsg = resultFail.querySelector('p');
+        failTitle.textContent = '⚠️ Error de conexión';
+        failMsg.textContent = 'No se pudo verificar el balance. Reintentá.';
+        // Agregar botón de reintentar
+        let retryBtn = document.getElementById('retryBtn');
+        if (!retryBtn) {
+          retryBtn = document.createElement('button');
+          retryBtn.id = 'retryBtn';
+          retryBtn.className = 'btn-connect';
+          retryBtn.textContent = 'Reintentar verificación';
+          retryBtn.style.cssText = 'margin-top:12px;padding:12px 24px;font-size:14px;';
+          retryBtn.onclick = verifyBalance;
+          resultFail.appendChild(retryBtn);
+        }
+        retryBtn.style.display = 'block';
       }
     }
 
     // ─────────────── Disconnect ───────────────
     async function disconnectWallet() {
-      const provider = getProvider();
-      if (provider) {
-        try { await provider.disconnect(); } catch(e) {}
+      if (currentProvider) {
+        try { await currentProvider.disconnect(); } catch(e) {}
+        currentProvider = null;
       }
       walletPublicKey = null;
       connection = null;
@@ -430,6 +455,13 @@
       btnConnect.innerHTML = 'Conectar Wallet';
       resultSuccess.classList.remove('visible');
       resultFail.classList.remove('visible');
+      // Resetear mensaje de fail
+      const failTitle = resultFail.querySelector('.result-title');
+      const failMsg = resultFail.querySelector('p');
+      if (failTitle) failTitle.textContent = '🐽 Todavía no eres un cerdo espectaculador';
+      if (failMsg) failMsg.textContent = 'No tenés tokens CERDOS en esta wallet.';
+      const retryBtn = document.getElementById('retryBtn');
+      if (retryBtn) retryBtn.style.display = 'none';
     }
 
     // ─────────────── Auto-connect on load ───────────────
