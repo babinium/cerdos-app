@@ -13,9 +13,10 @@
       background: #0D0D0D;
       min-height: 100vh;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 20px;
+      padding: 20px 20px 0 20px;
     }
 
     /* ── Fondo con grid neón sutil ── */
@@ -196,7 +197,12 @@
       margin: 32px 0 24px;
     }
 
-    /* ── Tragamonedas ── */
+    /* ── Tragamonedas full-width ── */
+    .slot-section {
+      text-align: center;
+      padding: 32px 16px;
+    }
+
     .slot-section h3 {
       font-size: 16px;
       color: #BF5FFF;
@@ -204,14 +210,9 @@
       margin-bottom: 16px;
     }
 
-    .slot-placeholder {
-      display: inline-block;
-      width: 100%;
-      padding: 0 8px;
-    }
-
     .slot-img {
       width: 100%;
+      max-width: 500px;
       height: auto;
       object-fit: contain;
       opacity: 0.9;
@@ -292,25 +293,21 @@
         <button class="btn-disconnect" onclick="disconnectWallet()">Desconectar</button>
       </div>
 
-      <hr class="divider">
-
-      <!-- Slot machine placeholder -->
-      <div class="slot-section">
-        <h3>✨ Próximamente</h3>
-        <div class="slot-placeholder">
-          <img class="slot-img" src="slot-machine.jpg" alt="Ruleta Porcina">
-        </div>
-      </div>
     </div>
+  </div>
+
+  <!-- Slot machine: full width -->
+  <div class="slot-section">
+    <h3>✨ Próximamente</h3>
+    <img class="slot-img" src="slot-machine.jpg" alt="Ruleta Porcina">
   </div>
 
   <script>
     // ─────────────── Config ───────────────
     const CERDOS_MINT = 'CqJ5xawaraBqH5VPSQaCk7Dfei3aju3ry2UxfWkoGdKm';
     const RPC_URLS = [
-      'https://solana-rpc.publicnode.com',
-      'https://rpc.ankr.com/solana',
-      'https://api.mainnet-beta.solana.com'
+      'https://api.mainnet-beta.solana.com',
+      'https://solana-api.projectserum.com'
     ];
     let connection = null;
     let walletPublicKey = null;
