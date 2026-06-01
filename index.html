@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🐷 Cerdos App</title>
+  <script src="https://unpkg.com/@solana/web3.js@1.91.7/lib/index.iife.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #FFF8E7 0%, #FFE4C4 50%, #FFDAB9 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 420px;
+      width: 100%;
+    }
+
+    .card {
+      background: white;
+      border-radius: 24px;
+      padding: 40px 32px;
+      box-shadow: 0 20px 60px rgba(139, 69, 19, 0.15);
+      text-align: center;
+    }
+
+    .logo {
+      font-size: 80px;
+      margin-bottom: 8px;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    h1 {
+      font-size: 28px;
+      font-weight: 800;
+      color: #8B4513;
+      margin-bottom: 4px;
+    }
+
+    .subtitle {
+      color: #A0845C;
+      font-size: 14px;
+      margin-bottom: 32px;
+    }
+
+    .btn-connect {
+      background: linear-gradient(135deg, #8B4513 0%, #A0522D 100%);
+      color: white;
+      border: none;
+      padding: 16px 40px;
+      border-radius: 16px;
+      font-size: 18px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s;
+      width: 100%;
+      box-shadow: 0 4px 15px rgba(139, 69, 19, 0.3);
+    }
+
+    .btn-connect:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(139, 69, 19, 0.4);
+    }
+
+    .btn-connect:active {
+      transform: translateY(0);
+    }
+
+    .btn-connect:disabled {
+      background: #CCC;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    .result {
+      margin-top: 24px;
+      padding: 20px;
+      border-radius: 16px;
+      display: none;
+      animation: slideUp 0.4s ease;
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .result.success {
+      display: block;
+      background: linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%);
+      border: 2px solid #4CAF50;
+    }
+
+    .result.fail {
+      display: block;
+      background: linear-gradient(135deg, #FFEBEE 0%, #FFCDD2 100%);
+      border: 2px solid #F44336;
+    }
+
+    .result-icon {
+      font-size: 48px;
+      margin-bottom: 8px;
+    }
+
+    .result-title {
+      font-size: 20px;
+      font-weight: 800;
+      margin-bottom: 12px;
+    }
+
+    .success .result-title { color: #2E7D32; }
+    .fail .result-title { color: #C62828; }
+
+    .wallet-info {
+      background: rgba(255,255,255,0.7);
+      border-radius: 12px;
+      padding: 12px;
+      margin-top: 12px;
+      font-size: 13px;
+      color: #555;
+      word-break: break-all;
+    }
+
+    .wallet-info strong {
+      display: block;
+      color: #8B4513;
+      margin-bottom: 4px;
+    }
+
+    .balance {
+      font-size: 36px;
+      font-weight: 900;
+      color: #2E7D32;
+      margin: 8px 0;
+    }
+
+    .divider {
+      border: none;
+      border-top: 2px dashed #DDD;
+      margin: 32px 0 24px;
+    }
+
+    .roulette-section h3 {
+      font-size: 16px;
+      color: #8B4513;
+      margin-bottom: 12px;
+    }
+
+    .roulette-placeholder {
+      position: relative;
+      display: inline-block;
+    }
+
+    .roulette-img {
+      width: 120px;
+      height: 120px;
+      opacity: 0.5;
+      filter: grayscale(30%);
+    }
+
+    .coming-soon {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #8B4513;
+      color: white;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    }
+
+    .btn-disconnect {
+      background: transparent;
+      border: 2px solid #DDD;
+      color: #999;
+      padding: 8px 20px;
+      border-radius: 12px;
+      font-size: 13px;
+      cursor: pointer;
+      margin-top: 16px;
+      transition: all 0.2s;
+    }
+
+    .btn-disconnect:hover {
+      border-color: #F44336;
+      color: #F44336;
+    }
+
+    .loading {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <div class="logo">🐷</div>
+      <h1>Cerdos App</h1>
+      <p class="subtitle">¿Eres un cerdo espectaculador?</p>
+
+      <!-- Connect button -->
+      <button id="btnConnect" class="btn-connect" onclick="connectWallet()">
+        🦊 Conectar Wallet
+      </button>
+
+      <!-- Success result -->
+      <div id="resultSuccess" class="result success">
+        <div class="result-icon">🐷✨</div>
+        <div class="result-title">¡Eres un cerdo espectaculador!</div>
+        <div class="balance" id="balanceDisplay">0</div>
+        <div style="color:#2E7D32;font-weight:600;">CERDOS</div>
+        <div class="wallet-info">
+          <strong>🔑 Wallet</strong>
+          <span id="walletDisplay">—</span>
+        </div>
+        <button class="btn-disconnect" onclick="disconnectWallet()">Desconectar</button>
+      </div>
+
+      <!-- Fail result -->
+      <div id="resultFail" class="result fail">
+        <div class="result-icon">🐽</div>
+        <div class="result-title">Todavía no eres un cerdo espectaculador</div>
+        <p style="color:#666;font-size:14px;margin-bottom:12px;">
+          No tenés tokens CERDOS en esta wallet.
+        </p>
+        <div class="wallet-info">
+          <strong>🔑 Wallet</strong>
+          <span id="walletDisplayFail">—</span>
+        </div>
+        <button class="btn-disconnect" onclick="disconnectWallet()">Desconectar</button>
+      </div>
+
+      <hr class="divider">
+
+      <!-- Roulette placeholder -->
+      <div class="roulette-section">
+        <h3>🎰 Ruleta Porcina</h3>
+        <div class="roulette-placeholder">
+          <svg class="roulette-img" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+            <!-- Wheel outer -->
+            <circle cx="60" cy="60" r="55" fill="#8B4513" stroke="#5D2E0C" stroke-width="3"/>
+            <!-- Segments -->
+            <path d="M60,10 L60,60 L10,60 A50,50 0 0,1 60,10 Z" fill="#FF6B6B"/>
+            <path d="M60,10 L60,60 L110,60 A50,50 0 0,1 60,10 Z" fill="#4ECDC4"/>
+            <path d="M60,60 L60,110 L10,60 A50,50 0 0,0 60,110 Z" fill="#FFD93D"/>
+            <path d="M60,60 L60,110 L110,60 A50,50 0 0,0 60,110 Z" fill="#6BCB77"/>
+            <!-- Center -->
+            <circle cx="60" cy="60" r="12" fill="#FFD700" stroke="#5D2E0C" stroke-width="2"/>
+            <circle cx="60" cy="60" r="5" fill="#FFF"/>
+            <!-- Divider lines -->
+            <line x1="60" y1="10" x2="60" y2="110" stroke="#5D2E0C" stroke-width="1.5"/>
+            <line x1="10" y1="60" x2="110" y2="60" stroke="#5D2E0C" stroke-width="1.5"/>
+          </svg>
+          <span class="coming-soon">✨ Próximamente</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ─────────────── Config ───────────────
+    const CERDOS_MINT = 'CqJ5xawaraBqH5VPSQaCk7Dfei3aju3ry2UxfWkoGdKm';
+    const RPC_URL = 'https://api.mainnet-beta.solana.com';
+    let connection = null;
+    let walletPublicKey = null;
+
+    // ─────────────── DOM refs ───────────────
+    const btnConnect = document.getElementById('btnConnect');
+    const resultSuccess = document.getElementById('resultSuccess');
+    const resultFail = document.getElementById('resultFail');
+
+    // ─────────────── Get provider ───────────────
+    function getProvider() {
+      if (typeof window !== 'undefined') {
+        // Phantom extension (desktop)
+        if (window.phantom?.solana?.isPhantom) {
+          return window.phantom.solana;
+        }
+        // Solflare extension
+        if (window.solflare?.isSolflare) {
+          return window.solflare;
+        }
+        // Phantom/Solflare in-app browser (mobile)
+        if (window.solana?.isPhantom || window.solana?.isSolflare) {
+          return window.solana;
+        }
+      }
+      return null;
+    }
+
+    // ─────────────── Connect ───────────────
+    async function connectWallet() {
+      const provider = getProvider();
+
+      if (!provider) {
+        // No wallet detected — deep link or instructions
+        const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+        if (isMobile) {
+          // Open Phantom app via deep link
+          const currentUrl = encodeURIComponent(window.location.href);
+          window.location.href = `https://phantom.app/ul/browse/${currentUrl}?ref=${currentUrl}`;
+          return;
+        }
+
+        alert(
+          '🦊 No se detectó Phantom ni Solflare.\n\n' +
+          'En desktop: instalá Phantom desde phantom.app\n' +
+          'En mobile: abrí esta página desde el navegador de Phantom.'
+        );
+        return;
+      }
+
+      try {
+        btnConnect.disabled = true;
+        btnConnect.innerHTML = '<span class="loading"></span>Conectando...';
+
+        const resp = await provider.connect();
+        walletPublicKey = resp.publicKey.toString();
+
+        connection = new solanaWeb3.Connection(RPC_URL, 'confirmed');
+        await checkBalance();
+
+      } catch (err) {
+        console.error('Error conectando:', err);
+        btnConnect.disabled = false;
+        btnConnect.innerHTML = '🦊 Conectar Wallet';
+
+        if (err.code === 4001) {
+          // User rejected
+          return;
+        }
+        alert('Error al conectar: ' + err.message);
+      }
+    }
+
+    // ─────────────── Check balance ───────────────
+    async function checkBalance() {
+      try {
+        btnConnect.innerHTML = '<span class="loading"></span>Verificando cerdos...';
+
+        const mintPubkey = new solanaWeb3.PublicKey(CERDOS_MINT);
+        const ownerPubkey = new solanaWeb3.PublicKey(walletPublicKey);
+
+        const tokenAccounts = await connection.getParsedTokenAccountsByOwner(
+          ownerPubkey,
+          { mint: mintPubkey }
+        );
+
+        let balance = 0;
+        for (const acc of tokenAccounts.value) {
+          balance += acc.account.data.parsed.info.tokenAmount.uiAmount || 0;
+        }
+
+        // Hide connect button
+        btnConnect.style.display = 'none';
+
+        if (balance > 0) {
+          // 🟢 Es un cerdo espectaculador
+          resultSuccess.style.display = 'block';
+          resultFail.style.display = 'none';
+          document.getElementById('balanceDisplay').textContent =
+            balance % 1 === 0 ? balance.toLocaleString() : balance.toFixed(2);
+          document.getElementById('walletDisplay').textContent = walletPublicKey;
+        } else {
+          // 🔴 No tiene cerdos
+          resultSuccess.style.display = 'none';
+          resultFail.style.display = 'block';
+          document.getElementById('walletDisplayFail').textContent = walletPublicKey;
+        }
+
+      } catch (err) {
+        console.error('Error verificando balance:', err);
+        alert('Error al verificar el balance. Intentá de nuevo.\n\n' + err.message);
+        resetUI();
+      }
+    }
+
+    // ─────────────── Disconnect ───────────────
+    async function disconnectWallet() {
+      const provider = getProvider();
+      if (provider) {
+        try { await provider.disconnect(); } catch(e) {}
+      }
+
+      walletPublicKey = null;
+      connection = null;
+      resetUI();
+    }
+
+    function resetUI() {
+      btnConnect.style.display = 'block';
+      btnConnect.disabled = false;
+      btnConnect.innerHTML = '🦊 Conectar Wallet';
+      resultSuccess.style.display = 'none';
+      resultFail.style.display = 'none';
+    }
+
+    // ─────────────── Auto-connect on load ───────────────
+    window.addEventListener('load', () => {
+      const provider = getProvider();
+      if (provider) {
+        provider.on('accountChanged', () => {
+          if (walletPublicKey) disconnectWallet();
+        });
+      }
+    });
+  </script>
+</body>
+</html>
