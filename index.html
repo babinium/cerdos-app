@@ -305,10 +305,7 @@
   <script>
     // ─────────────── Config ───────────────
     const CERDOS_MINT = 'CqJ5xawaraBqH5VPSQaCk7Dfei3aju3ry2UxfWkoGdKm';
-    const RPC_URLS = [
-      'https://api.mainnet-beta.solana.com',
-      'https://solana-api.projectserum.com'
-    ];
+    const RPC_URL = 'https://mainnet.helius-rpc.com/?api-key=ef809e99-6099-412a-b731-3ce2cba78008';
     let connection = null;
     let walletPublicKey = null;
     let currentProvider = null;
@@ -369,17 +366,9 @@
         const mintPubkey = new solanaWeb3.PublicKey(CERDOS_MINT);
         const ownerPubkey = new solanaWeb3.PublicKey(walletPublicKey);
 
-        // Intentar cada RPC hasta que uno funcione
-        let tokenAccounts = null;
-        for (const url of RPC_URLS) {
-          try {
-            const conn = new solanaWeb3.Connection(url, 'confirmed');
-            tokenAccounts = await conn.getParsedTokenAccountsByOwner(ownerPubkey, { mint: mintPubkey });
-            connection = conn;
-            break;
-          } catch(e) { continue; }
-        }
-        if (!tokenAccounts) throw new Error('No se pudo conectar a ningún RPC');
+        const conn = new solanaWeb3.Connection(RPC_URL, 'confirmed');
+        const tokenAccounts = await conn.getParsedTokenAccountsByOwner(ownerPubkey, { mint: mintPubkey });
+        connection = conn;
 
         let balance = 0;
         for (const acc of tokenAccounts.value) {
