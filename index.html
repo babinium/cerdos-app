@@ -10,7 +10,7 @@
 
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: linear-gradient(135deg, #FFF8E7 0%, #FFE4C4 50%, #FFDAB9 100%);
+      background: #0D0D0D;
       min-height: 100vh;
       display: flex;
       align-items: center;
@@ -18,60 +18,86 @@
       padding: 20px;
     }
 
-    .container {
-      max-width: 420px;
-      width: 100%;
+    /* ── Fondo con grid neón sutil ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        linear-gradient(rgba(255,45,149,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,45,149,0.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
     }
 
+    .container {
+      max-width: 440px;
+      width: 100%;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ── Card principal ── */
     .card {
-      background: white;
+      background: linear-gradient(145deg, #1A1A2E 0%, #16162A 100%);
       border-radius: 24px;
       padding: 40px 32px;
-      box-shadow: 0 20px 60px rgba(139, 69, 19, 0.15);
+      border: 1px solid rgba(255,45,149,0.15);
+      box-shadow:
+        0 0 40px rgba(255,45,149,0.08),
+        0 20px 60px rgba(0,0,0,0.5);
       text-align: center;
     }
 
-    .logo {
-      font-size: 80px;
-      margin-bottom: 8px;
+    /* ── Logo ── */
+    .logo-img {
+      width: 100px;
+      height: 100px;
+      border-radius: 20px;
+      object-fit: cover;
+      margin-bottom: 12px;
+      border: 2px solid rgba(255,45,149,0.3);
+      box-shadow: 0 0 30px rgba(255,45,149,0.2);
       animation: float 3s ease-in-out infinite;
     }
 
     @keyframes float {
       0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-10px); }
+      50% { transform: translateY(-8px); }
     }
 
     h1 {
       font-size: 28px;
       font-weight: 800;
-      color: #8B4513;
+      color: #FF2D95;
+      text-shadow: 0 0 20px rgba(255,45,149,0.4);
       margin-bottom: 4px;
     }
 
     .subtitle {
-      color: #A0845C;
+      color: #8888AA;
       font-size: 14px;
       margin-bottom: 32px;
     }
 
+    /* ── Botón conectar ── */
     .btn-connect {
-      background: linear-gradient(135deg, #8B4513 0%, #A0522D 100%);
+      background: linear-gradient(135deg, #FF2D95 0%, #BF5FFF 100%);
       color: white;
       border: none;
       padding: 16px 40px;
-      border-radius: 16px;
+      border-radius: 14px;
       font-size: 18px;
       font-weight: 700;
       cursor: pointer;
       transition: all 0.3s;
       width: 100%;
-      box-shadow: 0 4px 15px rgba(139, 69, 19, 0.3);
+      box-shadow: 0 0 30px rgba(255,45,149,0.3);
     }
 
     .btn-connect:hover {
       transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(139, 69, 19, 0.4);
+      box-shadow: 0 0 50px rgba(255,45,149,0.5);
     }
 
     .btn-connect:active {
@@ -79,14 +105,15 @@
     }
 
     .btn-connect:disabled {
-      background: #CCC;
+      background: #333;
       cursor: not-allowed;
       box-shadow: none;
     }
 
+    /* ── Resultados ── */
     .result {
       margin-top: 24px;
-      padding: 20px;
+      padding: 24px 20px;
       border-radius: 16px;
       display: none;
       animation: slideUp 0.4s ease;
@@ -99,19 +126,16 @@
 
     .result.success {
       display: block;
-      background: linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%);
-      border: 2px solid #4CAF50;
+      background: rgba(57,255,20,0.06);
+      border: 1px solid rgba(57,255,20,0.3);
+      box-shadow: 0 0 30px rgba(57,255,20,0.1);
     }
 
     .result.fail {
       display: block;
-      background: linear-gradient(135deg, #FFEBEE 0%, #FFCDD2 100%);
-      border: 2px solid #F44336;
-    }
-
-    .result-icon {
-      font-size: 48px;
-      margin-bottom: 8px;
+      background: rgba(255,45,149,0.06);
+      border: 1px solid rgba(255,45,149,0.25);
+      box-shadow: 0 0 30px rgba(255,45,149,0.08);
     }
 
     .result-title {
@@ -120,54 +144,77 @@
       margin-bottom: 12px;
     }
 
-    .success .result-title { color: #2E7D32; }
-    .fail .result-title { color: #C62828; }
+    .success .result-title {
+      color: #39FF14;
+      text-shadow: 0 0 15px rgba(57,255,20,0.4);
+    }
+
+    .fail .result-title {
+      color: #FF2D95;
+      text-shadow: 0 0 15px rgba(255,45,149,0.3);
+    }
 
     .wallet-info {
-      background: rgba(255,255,255,0.7);
+      background: rgba(255,255,255,0.04);
       border-radius: 12px;
       padding: 12px;
       margin-top: 12px;
       font-size: 13px;
-      color: #555;
+      color: #999;
       word-break: break-all;
+      border: 1px solid rgba(255,255,255,0.06);
     }
 
     .wallet-info strong {
       display: block;
-      color: #8B4513;
+      color: #BF5FFF;
       margin-bottom: 4px;
     }
 
     .balance {
-      font-size: 36px;
+      font-size: 40px;
       font-weight: 900;
-      color: #2E7D32;
+      color: #39FF14;
+      text-shadow: 0 0 25px rgba(57,255,20,0.5);
       margin: 8px 0;
+    }
+
+    .balance-label {
+      color: #39FF14;
+      font-weight: 600;
+      font-size: 14px;
+      opacity: 0.8;
+      text-transform: uppercase;
+      letter-spacing: 2px;
     }
 
     .divider {
       border: none;
-      border-top: 2px dashed #DDD;
+      border-top: 1px solid rgba(255,45,149,0.1);
       margin: 32px 0 24px;
     }
 
-    .roulette-section h3 {
+    /* ── Tragamonedas ── */
+    .slot-section h3 {
       font-size: 16px;
-      color: #8B4513;
-      margin-bottom: 12px;
+      color: #BF5FFF;
+      text-shadow: 0 0 10px rgba(191,95,255,0.3);
+      margin-bottom: 16px;
     }
 
-    .roulette-placeholder {
+    .slot-placeholder {
       position: relative;
       display: inline-block;
     }
 
-    .roulette-img {
-      width: 120px;
-      height: 120px;
+    .slot-img {
+      width: 140px;
+      height: 140px;
+      border-radius: 16px;
+      object-fit: contain;
       opacity: 0.5;
-      filter: grayscale(30%);
+      filter: brightness(0.7);
+      border: 1px solid rgba(191,95,255,0.15);
     }
 
     .coming-soon {
@@ -175,20 +222,21 @@
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      background: #8B4513;
+      background: linear-gradient(135deg, #FF2D95, #BF5FFF);
       color: white;
-      padding: 6px 14px;
+      padding: 8px 18px;
       border-radius: 20px;
-      font-size: 12px;
+      font-size: 13px;
       font-weight: 700;
       white-space: nowrap;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+      box-shadow: 0 0 25px rgba(255,45,149,0.4);
+      letter-spacing: 1px;
     }
 
     .btn-disconnect {
       background: transparent;
-      border: 2px solid #DDD;
-      color: #999;
+      border: 1px solid rgba(255,255,255,0.1);
+      color: #888;
       padding: 8px 20px;
       border-radius: 12px;
       font-size: 13px;
@@ -198,15 +246,16 @@
     }
 
     .btn-disconnect:hover {
-      border-color: #F44336;
-      color: #F44336;
+      border-color: #FF2D95;
+      color: #FF2D95;
+      box-shadow: 0 0 15px rgba(255,45,149,0.15);
     }
 
     .loading {
       display: inline-block;
       width: 20px;
       height: 20px;
-      border: 2px solid rgba(255,255,255,0.3);
+      border: 2px solid rgba(255,255,255,0.2);
       border-top-color: white;
       border-radius: 50%;
       animation: spin 0.6s linear infinite;
@@ -222,7 +271,9 @@
 <body>
   <div class="container">
     <div class="card">
-      <div class="logo">🐷</div>
+      <!-- Logo del grupo -->
+      <img class="logo-img" src="logo-cerdos.jpg" alt="Cerdos Logo">
+
       <h1>Cerdos App</h1>
       <p class="subtitle">¿Eres un cerdo espectaculador?</p>
 
@@ -233,10 +284,9 @@
 
       <!-- Success result -->
       <div id="resultSuccess" class="result success">
-        <div class="result-icon">🐷✨</div>
-        <div class="result-title">¡Eres un cerdo espectaculador!</div>
+        <div class="result-title">✨ ¡Eres un cerdo espectaculador!</div>
         <div class="balance" id="balanceDisplay">0</div>
-        <div style="color:#2E7D32;font-weight:600;">CERDOS</div>
+        <div class="balance-label">CERDOS</div>
         <div class="wallet-info">
           <strong>🔑 Wallet</strong>
           <span id="walletDisplay">—</span>
@@ -246,9 +296,8 @@
 
       <!-- Fail result -->
       <div id="resultFail" class="result fail">
-        <div class="result-icon">🐽</div>
-        <div class="result-title">Todavía no eres un cerdo espectaculador</div>
-        <p style="color:#666;font-size:14px;margin-bottom:12px;">
+        <div class="result-title">🐽 Todavía no eres un cerdo espectaculador</div>
+        <p style="color:#888;font-size:14px;margin-bottom:12px;">
           No tenés tokens CERDOS en esta wallet.
         </p>
         <div class="wallet-info">
@@ -260,25 +309,11 @@
 
       <hr class="divider">
 
-      <!-- Roulette placeholder -->
-      <div class="roulette-section">
+      <!-- Slot machine placeholder -->
+      <div class="slot-section">
         <h3>🎰 Ruleta Porcina</h3>
-        <div class="roulette-placeholder">
-          <svg class="roulette-img" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
-            <!-- Wheel outer -->
-            <circle cx="60" cy="60" r="55" fill="#8B4513" stroke="#5D2E0C" stroke-width="3"/>
-            <!-- Segments -->
-            <path d="M60,10 L60,60 L10,60 A50,50 0 0,1 60,10 Z" fill="#FF6B6B"/>
-            <path d="M60,10 L60,60 L110,60 A50,50 0 0,1 60,10 Z" fill="#4ECDC4"/>
-            <path d="M60,60 L60,110 L10,60 A50,50 0 0,0 60,110 Z" fill="#FFD93D"/>
-            <path d="M60,60 L60,110 L110,60 A50,50 0 0,0 60,110 Z" fill="#6BCB77"/>
-            <!-- Center -->
-            <circle cx="60" cy="60" r="12" fill="#FFD700" stroke="#5D2E0C" stroke-width="2"/>
-            <circle cx="60" cy="60" r="5" fill="#FFF"/>
-            <!-- Divider lines -->
-            <line x1="60" y1="10" x2="60" y2="110" stroke="#5D2E0C" stroke-width="1.5"/>
-            <line x1="10" y1="60" x2="110" y2="60" stroke="#5D2E0C" stroke-width="1.5"/>
-          </svg>
+        <div class="slot-placeholder">
+          <img class="slot-img" src="slot-machine.jpg" alt="Ruleta Porcina">
           <span class="coming-soon">✨ Próximamente</span>
         </div>
       </div>
@@ -300,18 +335,9 @@
     // ─────────────── Get provider ───────────────
     function getProvider() {
       if (typeof window !== 'undefined') {
-        // Phantom extension (desktop)
-        if (window.phantom?.solana?.isPhantom) {
-          return window.phantom.solana;
-        }
-        // Solflare extension
-        if (window.solflare?.isSolflare) {
-          return window.solflare;
-        }
-        // Phantom/Solflare in-app browser (mobile)
-        if (window.solana?.isPhantom || window.solana?.isSolflare) {
-          return window.solana;
-        }
+        if (window.phantom?.solana?.isPhantom) return window.phantom.solana;
+        if (window.solflare?.isSolflare) return window.solflare;
+        if (window.solana?.isPhantom || window.solana?.isSolflare) return window.solana;
       }
       return null;
     }
@@ -321,21 +347,13 @@
       const provider = getProvider();
 
       if (!provider) {
-        // No wallet detected — deep link or instructions
         const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-
         if (isMobile) {
-          // Open Phantom app via deep link
           const currentUrl = encodeURIComponent(window.location.href);
           window.location.href = `https://phantom.app/ul/browse/${currentUrl}?ref=${currentUrl}`;
           return;
         }
-
-        alert(
-          '🦊 No se detectó Phantom ni Solflare.\n\n' +
-          'En desktop: instalá Phantom desde phantom.app\n' +
-          'En mobile: abrí esta página desde el navegador de Phantom.'
-        );
+        alert('🦊 No se detectó Phantom ni Solflare.\n\nDesktop: instalá Phantom desde phantom.app\nMobile: abrí esta página desde el navegador de Phantom.');
         return;
       }
 
@@ -345,7 +363,6 @@
 
         const resp = await provider.connect();
         walletPublicKey = resp.publicKey.toString();
-
         connection = new solanaWeb3.Connection(RPC_URL, 'confirmed');
         await checkBalance();
 
@@ -353,11 +370,7 @@
         console.error('Error conectando:', err);
         btnConnect.disabled = false;
         btnConnect.innerHTML = '🦊 Conectar Wallet';
-
-        if (err.code === 4001) {
-          // User rejected
-          return;
-        }
+        if (err.code === 4001) return; // user rejected
         alert('Error al conectar: ' + err.message);
       }
     }
@@ -380,18 +393,15 @@
           balance += acc.account.data.parsed.info.tokenAmount.uiAmount || 0;
         }
 
-        // Hide connect button
         btnConnect.style.display = 'none';
 
         if (balance > 0) {
-          // 🟢 Es un cerdo espectaculador
           resultSuccess.style.display = 'block';
           resultFail.style.display = 'none';
           document.getElementById('balanceDisplay').textContent =
             balance % 1 === 0 ? balance.toLocaleString() : balance.toFixed(2);
           document.getElementById('walletDisplay').textContent = walletPublicKey;
         } else {
-          // 🔴 No tiene cerdos
           resultSuccess.style.display = 'none';
           resultFail.style.display = 'block';
           document.getElementById('walletDisplayFail').textContent = walletPublicKey;
@@ -399,7 +409,7 @@
 
       } catch (err) {
         console.error('Error verificando balance:', err);
-        alert('Error al verificar el balance. Intentá de nuevo.\n\n' + err.message);
+        alert('Error al verificar el balance.\n\n' + err.message);
         resetUI();
       }
     }
@@ -410,7 +420,6 @@
       if (provider) {
         try { await provider.disconnect(); } catch(e) {}
       }
-
       walletPublicKey = null;
       connection = null;
       resetUI();
