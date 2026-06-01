@@ -264,7 +264,7 @@
 
       <!-- Connect button -->
       <button id="btnConnect" class="btn-connect" onclick="connectWallet()">
-        🦊 Conectar Wallet
+        Conectar Wallet
       </button>
 
       <!-- Success result -->
@@ -353,7 +353,7 @@
       } catch (err) {
         console.error('Error conectando:', err);
         btnConnect.disabled = false;
-        btnConnect.innerHTML = '🦊 Conectar Wallet';
+        btnConnect.innerHTML = 'Conectar Wallet';
         if (err.code === 4001) return; // user rejected
         alert('Error al conectar: ' + err.message);
       }
@@ -412,7 +412,7 @@
     function resetUI() {
       btnConnect.style.display = 'block';
       btnConnect.disabled = false;
-      btnConnect.innerHTML = '🦊 Conectar Wallet';
+      btnConnect.innerHTML = 'Conectar Wallet';
       resultSuccess.classList.remove('visible');
       resultFail.classList.remove('visible');
     }
