@@ -206,16 +206,16 @@
 
     .slot-placeholder {
       display: inline-block;
+      width: 100%;
+      padding: 0 8px;
     }
 
     .slot-img {
-      width: 260px;
-      height: 260px;
-      border-radius: 16px;
+      width: 100%;
+      height: auto;
       object-fit: contain;
-      opacity: 0.8;
-      filter: brightness(0.9);
-      border: 1px solid rgba(191,95,255,0.15);
+      opacity: 0.9;
+      filter: brightness(0.95);
     }
 
     .btn-disconnect {
@@ -314,23 +314,12 @@
     ];
     let connection = null;
     let walletPublicKey = null;
-
-    async function tryConnect() {
-      for (const url of RPC_URLS) {
-        try {
-          const conn = new solanaWeb3.Connection(url, 'confirmed');
-          await conn.getSlot();
-          return conn;
-        } catch(e) { continue; }
-      }
-      throw new Error('No se pudo conectar a ningún RPC');
-    }
+    let currentProvider = null;
 
     // ─────────────── DOM refs ───────────────
     const btnConnect = document.getElementById('btnConnect');
     const resultSuccess = document.getElementById('resultSuccess');
     const resultFail = document.getElementById('resultFail');
-    let currentProvider = null;
 
     // ─────────────── Get provider ───────────────
     function getProvider() {
@@ -383,14 +372,17 @@
         const mintPubkey = new solanaWeb3.PublicKey(CERDOS_MINT);
         const ownerPubkey = new solanaWeb3.PublicKey(walletPublicKey);
 
-        if (!connection) {
-          connection = await tryConnect();
+        // Intentar cada RPC hasta que uno funcione
+        let tokenAccounts = null;
+        for (const url of RPC_URLS) {
+          try {
+            const conn = new solanaWeb3.Connection(url, 'confirmed');
+            tokenAccounts = await conn.getParsedTokenAccountsByOwner(ownerPubkey, { mint: mintPubkey });
+            connection = conn;
+            break;
+          } catch(e) { continue; }
         }
-
-        const tokenAccounts = await connection.getParsedTokenAccountsByOwner(
-          ownerPubkey,
-          { mint: mintPubkey }
-        );
+        if (!tokenAccounts) throw new Error('No se pudo conectar a ningún RPC');
 
         let balance = 0;
         for (const acc of tokenAccounts.value) {
