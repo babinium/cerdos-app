@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>🐷 Cerdos App</title>
   <script src="https://unpkg.com/@solana/web3.js@1.91.7/lib/index.iife.min.js"></script>
+  <script src="https://unpkg.com/@solana/spl-token@0.4.6/lib/index.iife.min.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -18,7 +19,6 @@
       padding: 20px;
     }
 
-    /* ── Fondo grid neón ── */
     body::before {
       content: '';
       position: fixed;
@@ -30,14 +30,9 @@
       pointer-events: none;
     }
 
-    .container {
-      max-width: 440px;
-      width: 100%;
-      position: relative;
-      z-index: 1;
-    }
+    .container { max-width: 440px; width: 100%; position: relative; z-index: 1; }
 
-    /* ── Card principal (wallet) ── */
+    /* ── Wallet Card ── */
     .card {
       background: linear-gradient(145deg, #1A1A2E 0%, #16162A 100%);
       border-radius: 24px;
@@ -49,54 +44,31 @@
     }
 
     .logo-img {
-      width: 80px;
-      height: 80px;
-      border-radius: 16px;
-      object-fit: cover;
-      margin-bottom: 8px;
-      border: 2px solid rgba(255,45,149,0.3);
+      width: 80px; height: 80px; border-radius: 16px; object-fit: cover;
+      margin-bottom: 8px; border: 2px solid rgba(255,45,149,0.3);
       box-shadow: 0 0 30px rgba(255,45,149,0.2);
     }
 
     h1 {
-      font-size: 24px;
-      font-weight: 800;
-      color: #FF2D95;
-      text-shadow: 0 0 20px rgba(255,45,149,0.4);
-      margin-bottom: 2px;
+      font-size: 24px; font-weight: 800; color: #FF2D95;
+      text-shadow: 0 0 20px rgba(255,45,149,0.4); margin-bottom: 2px;
     }
 
-    .subtitle {
-      color: #8888AA;
-      font-size: 13px;
-      margin-bottom: 24px;
-    }
+    .subtitle { color: #8888AA; font-size: 13px; margin-bottom: 24px; }
 
     .btn-connect {
       background: linear-gradient(135deg, #FF2D95 0%, #BF5FFF 100%);
-      color: white;
-      border: none;
-      padding: 14px 32px;
-      border-radius: 14px;
-      font-size: 16px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all 0.3s;
-      width: 100%;
-      box-shadow: 0 0 30px rgba(255,45,149,0.3);
+      color: white; border: none; padding: 14px 32px; border-radius: 14px;
+      font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.3s;
+      width: 100%; box-shadow: 0 0 30px rgba(255,45,149,0.3);
     }
-
     .btn-connect:hover { transform: translateY(-2px); box-shadow: 0 0 50px rgba(255,45,149,0.5); }
-    .btn-connect:active { transform: translateY(0); }
     .btn-connect:disabled { background: #333; cursor: not-allowed; box-shadow: none; }
 
     /* ── Resultados wallet ── */
     .result {
-      margin-top: 20px;
-      padding: 20px 16px;
-      border-radius: 16px;
-      display: none;
-      animation: slideUp 0.4s ease;
+      margin-top: 20px; padding: 20px 16px; border-radius: 16px;
+      display: none; animation: slideUp 0.4s ease;
     }
     @keyframes slideUp {
       from { opacity: 0; transform: translateY(20px); }
@@ -113,225 +85,112 @@
       box-shadow: 0 0 30px rgba(255,45,149,0.08);
     }
     .result.visible { display: block; }
-    .result-title {
-      font-size: 18px;
-      font-weight: 800;
-      margin-bottom: 10px;
-    }
+    .result-title { font-size: 18px; font-weight: 800; margin-bottom: 10px; }
     .success .result-title { color: #39FF14; text-shadow: 0 0 15px rgba(57,255,20,0.4); }
     .fail .result-title { color: #FF2D95; text-shadow: 0 0 15px rgba(255,45,149,0.3); }
     .wallet-info {
-      background: rgba(255,255,255,0.04);
-      border-radius: 12px;
-      padding: 10px;
-      margin-top: 10px;
-      font-size: 12px;
-      color: #999;
-      word-break: break-all;
+      background: rgba(255,255,255,0.04); border-radius: 12px;
+      padding: 10px; margin-top: 10px; font-size: 12px; color: #999; word-break: break-all;
     }
     .wallet-info strong { display: block; color: #BF5FFF; margin-bottom: 4px; }
     .balance { font-size: 32px; font-weight: 900; color: #39FF14; text-shadow: 0 0 25px rgba(57,255,20,0.5); margin: 6px 0; }
     .balance-label { color: #39FF14; font-weight: 600; font-size: 13px; opacity: 0.8; text-transform: uppercase; letter-spacing: 2px; }
     .btn-disconnect {
-      background: transparent;
-      border: 1px solid rgba(255,255,255,0.1);
-      color: #888;
-      padding: 8px 20px;
-      border-radius: 12px;
-      font-size: 13px;
-      cursor: pointer;
-      margin-top: 14px;
-      transition: all 0.2s;
+      background: transparent; border: 1px solid rgba(255,255,255,0.1);
+      color: #888; padding: 8px 20px; border-radius: 12px; font-size: 13px;
+      cursor: pointer; margin-top: 14px; transition: all 0.2s;
     }
-    .btn-disconnect:hover { border-color: #FF2D95; color: #FF2D95; box-shadow: 0 0 15px rgba(255,45,149,0.15); }
+    .btn-disconnect:hover { border-color: #FF2D95; color: #FF2D95; }
     .loading {
-      display: inline-block;
-      width: 18px;
-      height: 18px;
-      border: 2px solid rgba(255,255,255,0.2);
-      border-top-color: white;
-      border-radius: 50%;
-      animation: spin 0.6s linear infinite;
-      margin-right: 8px;
-      vertical-align: middle;
+      display: inline-block; width: 18px; height: 18px;
+      border: 2px solid rgba(255,255,255,0.2); border-top-color: white;
+      border-radius: 50%; animation: spin 0.6s linear infinite;
+      margin-right: 8px; vertical-align: middle;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
     /* ═══════════════════════════════════════════
        🎰 TRAGAMONEDAS
        ═══════════════════════════════════════════ */
-
     .slot-card {
       background: linear-gradient(145deg, #1A1A2E 0%, #16162A 100%);
-      border-radius: 24px;
-      padding: 28px 24px 24px;
+      border-radius: 24px; padding: 28px 24px 24px;
       border: 1px solid rgba(57,255,20,0.12);
       box-shadow: 0 0 50px rgba(57,255,20,0.06), 0 20px 60px rgba(0,0,0,0.5);
-      text-align: center;
-      margin-bottom: 24px;
+      text-align: center; margin-bottom: 24px;
     }
 
-    .slot-title {
-      font-size: 20px;
-      font-weight: 800;
-      color: #39FF14;
-      text-shadow: 0 0 20px rgba(57,255,20,0.3);
-      margin-bottom: 6px;
-    }
+    .slot-subtitle { color: #666; font-size: 12px; margin-bottom: 20px; }
 
-    .slot-subtitle {
-      color: #666;
-      font-size: 12px;
-      margin-bottom: 20px;
-    }
-
-    /* ── 3 Reels ── */
-    .reels {
-      display: flex;
-      justify-content: center;
-      gap: 12px;
-      margin-bottom: 20px;
-    }
-
+    /* ── Reels ── */
+    .reels { display: flex; justify-content: center; gap: 12px; margin-bottom: 20px; }
     .reel-box {
-      width: 100px;
-      height: 100px;
-      background: linear-gradient(145deg, #111122 0%, #0A0A18 100%);
-      border-radius: 16px;
-      border: 2px solid rgba(57,255,20,0.15);
-      overflow: hidden;
-      position: relative;
-      box-shadow: inset 0 0 20px rgba(0,0,0,0.5), 0 0 20px rgba(57,255,20,0.05);
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      width: 100px; height: 100px; background: linear-gradient(145deg, #111122 0%, #0A0A18 100%);
+      border-radius: 16px; border: 2px solid rgba(57,255,20,0.15); overflow: hidden;
+      position: relative; box-shadow: inset 0 0 20px rgba(0,0,0,0.5), 0 0 20px rgba(57,255,20,0.05);
+      display: flex; align-items: center; justify-content: center;
     }
-
-    .reel-box img {
-      width: 80px;
-      height: 80px;
-      object-fit: contain;
-      transition: transform 0.05s linear;
-    }
-
-    .reel-box.spinning img {
-      animation: reelFlicker 0.08s infinite;
-    }
-
+    .reel-box img { width: 80px; height: 80px; object-fit: contain; }
+    .reel-box.spinning img { animation: reelFlicker 0.08s infinite; }
     @keyframes reelFlicker {
       0%, 100% { opacity: 1; transform: scale(1); }
       50% { opacity: 0.7; transform: scale(0.92); }
     }
-
     .reel-box.win {
       border-color: #39FF14 !important;
       box-shadow: 0 0 30px rgba(57,255,20,0.4), inset 0 0 20px rgba(57,255,20,0.1) !important;
       animation: winPulse 0.4s ease-in-out 3;
     }
-
     @keyframes winPulse {
       0%, 100% { transform: scale(1); }
       50% { transform: scale(1.08); }
     }
 
-    /* ── Botón girar ── */
+    /* ── Botón ── */
     .btn-spin {
       background: linear-gradient(135deg, #39FF14 0%, #00CC66 100%);
-      color: #0D0D0D;
-      border: none;
-      padding: 16px 48px;
-      border-radius: 14px;
-      font-size: 20px;
-      font-weight: 800;
-      cursor: pointer;
-      transition: all 0.3s;
-      box-shadow: 0 0 40px rgba(57,255,20,0.3);
-      text-transform: uppercase;
-      letter-spacing: 3px;
-      width: 100%;
+      color: #0D0D0D; border: none; padding: 16px 48px; border-radius: 14px;
+      font-size: 20px; font-weight: 800; cursor: pointer; transition: all 0.3s;
+      box-shadow: 0 0 40px rgba(57,255,20,0.3); text-transform: uppercase;
+      letter-spacing: 3px; width: 100%;
     }
-
-    .btn-spin:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 0 60px rgba(57,255,20,0.5);
-    }
-
-    .btn-spin:active { transform: translateY(0); }
-
-    .btn-spin:disabled {
-      background: #222;
-      color: #555;
-      cursor: not-allowed;
-      box-shadow: none;
-      transform: none;
-    }
+    .btn-spin:hover { transform: translateY(-3px); box-shadow: 0 0 60px rgba(57,255,20,0.5); }
+    .btn-spin:disabled { background: #222; color: #555; cursor: not-allowed; box-shadow: none; transform: none; }
+    .btn-spin.free-mode { background: linear-gradient(135deg, #666 0%, #444 100%); box-shadow: 0 0 20px rgba(255,255,255,0.05); }
 
     /* ── Resultado ── */
     .slot-result {
-      margin-top: 16px;
-      padding: 14px;
-      border-radius: 12px;
-      font-weight: 700;
-      font-size: 16px;
-      min-height: 48px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.3s;
+      margin-top: 16px; padding: 14px; border-radius: 12px;
+      font-weight: 700; font-size: 16px; min-height: 48px;
+      display: flex; align-items: center; justify-content: center; transition: all 0.3s;
     }
-
     .slot-result.win-show {
-      background: rgba(57,255,20,0.08);
-      border: 1px solid rgba(57,255,20,0.3);
-      color: #39FF14;
-      text-shadow: 0 0 10px rgba(57,255,20,0.3);
-      animation: slideUp 0.4s ease;
+      background: rgba(57,255,20,0.08); border: 1px solid rgba(57,255,20,0.3);
+      color: #39FF14; text-shadow: 0 0 10px rgba(57,255,20,0.3); animation: slideUp 0.4s ease;
     }
+    .slot-result.error-show {
+      background: rgba(255,45,149,0.08); border: 1px solid rgba(255,45,149,0.25);
+      color: #FF2D95; animation: slideUp 0.4s ease;
+    }
+    .slot-result .multiplier { font-size: 28px; font-weight: 900; display: block; margin-top: 2px; }
+    .slot-result .tx-link { font-size: 11px; opacity: 0.6; margin-top: 6px; display: block; word-break: break-all; }
 
-    .slot-result.lose-show {
-      background: rgba(255,45,149,0.06);
-      border: 1px solid rgba(255,45,149,0.15);
-      color: #FF2D95;
-      animation: slideUp 0.4s ease;
+    .mode-badge {
+      display: inline-block; padding: 4px 12px; border-radius: 8px;
+      font-size: 11px; font-weight: 700; margin-bottom: 12px;
     }
-
-    .slot-result .multiplier {
-      font-size: 28px;
-      font-weight: 900;
-      display: block;
-      margin-top: 2px;
-    }
+    .mode-badge.free { background: rgba(255,255,255,0.05); color: #666; border: 1px solid rgba(255,255,255,0.08); }
+    .mode-badge.real { background: rgba(57,255,20,0.1); color: #39FF14; border: 1px solid rgba(57,255,20,0.25); }
 
     /* ── Paytable ── */
     .paytable {
-      display: flex;
-      justify-content: space-around;
-      margin-top: 20px;
-      padding: 12px;
-      background: rgba(255,255,255,0.03);
-      border-radius: 12px;
-      border: 1px solid rgba(255,255,255,0.05);
+      display: flex; justify-content: space-around; margin-top: 20px;
+      padding: 12px; background: rgba(255,255,255,0.03);
+      border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);
     }
-
-    .pay-item {
-      text-align: center;
-      font-size: 12px;
-      color: #888;
-    }
-
-    .pay-item img {
-      width: 40px;
-      height: 40px;
-      object-fit: contain;
-      margin-bottom: 4px;
-      display: block;
-    }
-
-    .pay-item .pay-value {
-      color: #39FF14;
-      font-weight: 700;
-      font-size: 14px;
-    }
+    .pay-item { text-align: center; font-size: 12px; color: #888; }
+    .pay-item img { width: 40px; height: 40px; object-fit: contain; margin-bottom: 4px; display: block; }
+    .pay-item .pay-value { color: #39FF14; font-weight: 700; font-size: 14px; }
   </style>
 </head>
 <body>
@@ -370,22 +229,18 @@
 
     <!-- ═══════════ TRAGAMONEDAS ═══════════ -->
     <div class="slot-card">
-      <div class="slot-subtitle">1 CERDO por giro · ¡3 iguales y ganás!</div>
+      <div class="mode-badge free" id="modeBadge">MODO PRUEBA</div>
+      <div class="slot-subtitle" id="slotSubtitle">1 CERDO por giro · ¡3 iguales y ganás!</div>
 
-      <!-- 3 Reels -->
       <div class="reels">
         <div class="reel-box" id="reel0"><img id="img0" src="mojarra_x1.jpg" alt="Slot 1"></div>
         <div class="reel-box" id="reel1"><img id="img1" src="mojarra_x1.jpg" alt="Slot 2"></div>
         <div class="reel-box" id="reel2"><img id="img2" src="mojarra_x1.jpg" alt="Slot 3"></div>
       </div>
 
-      <!-- Botón girar -->
-      <button class="btn-spin" id="btnSpin" onclick="spin()">🎰 GIRAR</button>
-
-      <!-- Resultado -->
+      <button class="btn-spin free-mode" id="btnSpin" onclick="spin()">🎰 GIRAR</button>
       <div class="slot-result" id="slotResult"></div>
 
-      <!-- Tabla de premios -->
       <div class="paytable">
         <div class="pay-item"><img src="mojarra_x1.jpg" alt="Mojarra"><span class="pay-value">x1</span>Mojarra</div>
         <div class="pay-item"><img src="tiburon_x10.jpg" alt="Tiburón"><span class="pay-value">x5</span>Tiburón</div>
@@ -395,24 +250,85 @@
     </div>
   </div>
 
-  <!-- ── Audio elements ── -->
+  <!-- ── Audios ── -->
   <audio id="soundSpin" src="giro.mp3" preload="auto"></audio>
   <audio id="soundWin" src="pago.mp3" preload="auto"></audio>
 
   <script>
     // ═══════════════════════════════════════
-    // WALLET LOGIC (unchanged)
+    // CONSTANTS
     // ═══════════════════════════════════════
-    const CERDOS_MINT = 'CqJ5xawaraBqH5VPSQaCk7Dfei3aju3ry2UxfWkoGdKm';
+    const CERDOS_MINT = new solanaWeb3.PublicKey('CqJ5xawaraBqH5VPSQaCk7Dfei3aju3ry2UxfWkoGdKm');
+    const CERDOS_DECIMALS = 2;
+    const HOUSE_ATA = new solanaWeb3.PublicKey('3ZysztEMT6XBByJLHzUfGu1D5gDqV5Krg1YKJSDLf1zz');
     const RPC_URL = 'https://mainnet.helius-rpc.com/?api-key=ef809e99-6099-412a-b731-3ce2cba78008';
+    const BACKEND_URL = '/pagar';  // same origin
+    const BET_RAW = 100;  // 1 CERDO = 100 raw
+
+    const ICONS = [
+      { name: 'Mojarra', file: 'mojarra_x1.jpg', multiplier: 1 },
+      { name: 'Tiburón', file: 'tiburon_x10.jpg', multiplier: 5 },
+      { name: 'Ballena', file: 'ballena_x30.jpg', multiplier: 15 },
+      { name: 'Cerdo',   file: 'cerdo_x100.jpg', multiplier: 40 }
+    ];
+
+    // ═══════════════════════════════════════
+    // STATE
+    // ═══════════════════════════════════════
     let connection = null;
     let walletPublicKey = null;
     let currentProvider = null;
+    let playerBalanceRaw = 0;  // raw units
+    let playerATA = null;
+    let spinning = false;
 
+    // ═══════════════════════════════════════
+    // DOM refs
+    // ═══════════════════════════════════════
     const btnConnect = document.getElementById('btnConnect');
     const resultSuccess = document.getElementById('resultSuccess');
     const resultFail = document.getElementById('resultFail');
+    const reelImgs = [
+      document.getElementById('img0'), document.getElementById('img1'), document.getElementById('img2')
+    ];
+    const reelBoxes = [
+      document.getElementById('reel0'), document.getElementById('reel1'), document.getElementById('reel2')
+    ];
+    const btnSpin = document.getElementById('btnSpin');
+    const slotResult = document.getElementById('slotResult');
+    const soundSpin = document.getElementById('soundSpin');
+    const soundWin = document.getElementById('soundWin');
+    const modeBadge = document.getElementById('modeBadge');
+    const slotSubtitle = document.getElementById('slotSubtitle');
 
+    // ═══════════════════════════════════════
+    // UI HELPERS
+    // ═══════════════════════════════════════
+    function setRealMode(active) {
+      if (active) {
+        modeBadge.textContent = 'MODO REAL';
+        modeBadge.className = 'mode-badge real';
+        btnSpin.classList.remove('free-mode');
+        btnSpin.textContent = '🎰 GIRAR 1 CERDO';
+        slotSubtitle.textContent = '1 CERDO por giro · ¡3 iguales y ganás!';
+      } else {
+        modeBadge.textContent = 'MODO PRUEBA';
+        modeBadge.className = 'mode-badge free';
+        btnSpin.classList.add('free-mode');
+        btnSpin.textContent = '🎰 GIRAR (prueba)';
+        slotSubtitle.textContent = 'Conectá tu wallet para jugar por CERDOS reales';
+      }
+    }
+
+    function updateBalanceDisplay() {
+      const cerdos = playerBalanceRaw / Math.pow(10, CERDOS_DECIMALS);
+      document.getElementById('balanceDisplay').textContent =
+        cerdos % 1 === 0 ? cerdos.toLocaleString() : cerdos.toFixed(2);
+    }
+
+    // ═══════════════════════════════════════
+    // WALLET: Provider detection
+    // ═══════════════════════════════════════
     function getProvider() {
       if (typeof window !== 'undefined') {
         if (window.phantom?.solana?.isPhantom) return window.phantom.solana;
@@ -422,13 +338,15 @@
       return null;
     }
 
+    // ═══════════════════════════════════════
+    // WALLET: Connect
+    // ═══════════════════════════════════════
     async function connectWallet() {
       const provider = getProvider();
       if (!provider) {
         const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
         if (isMobile) {
-          const currentUrl = encodeURIComponent(window.location.href);
-          window.location.href = `https://phantom.app/ul/browse/${currentUrl}?ref=${currentUrl}`;
+          window.location.href = `https://phantom.app/ul/browse/${encodeURIComponent(window.location.href)}?ref=${encodeURIComponent(window.location.href)}`;
           return;
         }
         alert('No se detectó Phantom ni Solflare.\n\nDesktop: instalá Phantom desde phantom.app\nMobile: abrí esta página desde el navegador de Phantom.');
@@ -438,7 +356,7 @@
         btnConnect.disabled = true;
         btnConnect.innerHTML = '<span class="loading"></span>Conectando...';
         const resp = await provider.connect();
-        walletPublicKey = resp.publicKey.toString();
+        walletPublicKey = resp.publicKey;
         currentProvider = provider;
         await verifyBalance();
       } catch (err) {
@@ -450,36 +368,44 @@
       }
     }
 
+    // ═══════════════════════════════════════
+    // WALLET: Verify balance
+    // ═══════════════════════════════════════
     async function verifyBalance() {
       try {
         btnConnect.innerHTML = '<span class="loading"></span>Verificando cerdos...';
-        const mintPubkey = new solanaWeb3.PublicKey(CERDOS_MINT);
-        const ownerPubkey = new solanaWeb3.PublicKey(walletPublicKey);
-        const conn = new solanaWeb3.Connection(RPC_URL, 'confirmed');
-        const tokenAccounts = await conn.getParsedTokenAccountsByOwner(ownerPubkey, { mint: mintPubkey });
-        connection = conn;
-        let balance = 0;
+        connection = new solanaWeb3.Connection(RPC_URL, 'confirmed');
+
+        const tokenAccounts = await connection.getParsedTokenAccountsByOwner(walletPublicKey, { mint: CERDOS_MINT });
+        playerBalanceRaw = 0;
         for (const acc of tokenAccounts.value) {
-          balance += acc.account.data.parsed.info.tokenAmount.uiAmount || 0;
+          playerBalanceRaw += Number(acc.account.data.parsed.info.tokenAmount.amount);
         }
+
+        // Derive player's ATA
+        playerATA = splToken.getAssociatedTokenAddressSync(CERDOS_MINT, walletPublicKey);
+
         btnConnect.style.display = 'none';
-        if (balance > 0) {
+
+        if (playerBalanceRaw > 0) {
           resultSuccess.classList.add('visible');
           resultFail.classList.remove('visible');
-          document.getElementById('balanceDisplay').textContent =
-            balance % 1 === 0 ? balance.toLocaleString() : balance.toFixed(2);
-          document.getElementById('walletDisplay').textContent = walletPublicKey;
+          updateBalanceDisplay();
+          document.getElementById('walletDisplay').textContent = walletPublicKey.toString();
+          setRealMode(true);
         } else {
           resultSuccess.classList.remove('visible');
           resultFail.classList.add('visible');
-          document.getElementById('walletDisplayFail').textContent = walletPublicKey;
+          document.getElementById('walletDisplayFail').textContent = walletPublicKey.toString();
+          setRealMode(false);
         }
       } catch (err) {
         console.error('Error verificando balance:', err);
         btnConnect.style.display = 'none';
         resultSuccess.classList.remove('visible');
         resultFail.classList.add('visible');
-        document.getElementById('walletDisplayFail').textContent = walletPublicKey;
+        document.getElementById('walletDisplayFail').textContent = walletPublicKey.toString();
+        setRealMode(false);
         const failTitle = resultFail.querySelector('.result-title');
         const failMsg = resultFail.querySelector('p');
         failTitle.textContent = '⚠️ Error de conexión';
@@ -498,12 +424,17 @@
       }
     }
 
+    // ═══════════════════════════════════════
+    // WALLET: Disconnect
+    // ═══════════════════════════════════════
     async function disconnectWallet() {
       if (currentProvider) {
         try { await currentProvider.disconnect(); } catch(e) {}
         currentProvider = null;
       }
       walletPublicKey = null;
+      playerBalanceRaw = 0;
+      playerATA = null;
       connection = null;
       resetUI();
     }
@@ -520,8 +451,225 @@
       if (failMsg) failMsg.textContent = 'No tenés tokens CERDOS en esta wallet.';
       const retryBtn = document.getElementById('retryBtn');
       if (retryBtn) retryBtn.style.display = 'none';
+      setRealMode(false);
     }
 
+    // ═══════════════════════════════════════
+    // 🎰 SPIN — Entry point
+    // ═══════════════════════════════════════
+    async function spin() {
+      if (spinning) return;
+
+      if (walletPublicKey && playerBalanceRaw >= BET_RAW) {
+        await spinReal();
+      } else {
+        spinFree();
+      }
+    }
+
+    // ═══════════════════════════════════════
+    // 🎰 SPIN — Real (cobra 1 CERDO)
+    // ═══════════════════════════════════════
+    async function spinReal() {
+      spinning = true;
+      btnSpin.disabled = true;
+      btnSpin.textContent = '⏳ Aprobá en Phantom...';
+      slotResult.className = 'slot-result';
+      slotResult.innerHTML = '';
+      reelBoxes.forEach(b => b.classList.remove('win'));
+
+      // 1. Build and send transfer
+      try {
+        const transferIx = splToken.createTransferInstruction(
+          playerATA, HOUSE_ATA, walletPublicKey, BET_RAW
+        );
+
+        const { blockhash } = await connection.getLatestBlockhash('confirmed');
+        const tx = new solanaWeb3.Transaction({
+          recentBlockhash: blockhash,
+          feePayer: walletPublicKey
+        }).add(transferIx);
+
+        // Player signs via Phantom
+        btnSpin.textContent = '✍️ Firmá en Phantom...';
+        const signedTx = await currentProvider.signTransaction(tx);
+
+        // Send
+        btnSpin.textContent = '📡 Enviando...';
+        const sig = await connection.sendRawTransaction(signedTx.serialize(), {
+          skipPreflight: false,
+          preflightCommitment: 'confirmed'
+        });
+
+        // Wait for confirmation
+        const confirmation = await connection.confirmTransaction(sig, 'confirmed');
+        if (confirmation.value.err) {
+          throw new Error('Transaction failed: ' + JSON.stringify(confirmation.value.err));
+        }
+
+        // ✅ Bet paid! Update balance
+        playerBalanceRaw -= BET_RAW;
+        updateBalanceDisplay();
+        btnSpin.textContent = '🎰 GIRANDO...';
+
+      } catch (err) {
+        console.error('Transfer error:', err);
+        spinning = false;
+        btnSpin.disabled = false;
+        btnSpin.textContent = '🎰 GIRAR 1 CERDO';
+        if (err.code === 4001) {
+          slotResult.className = 'slot-result error-show';
+          slotResult.innerHTML = '❌ Transacción cancelada';
+        } else {
+          slotResult.className = 'slot-result error-show';
+          slotResult.innerHTML = '❌ Error: ' + (err.message || 'Transacción falló').substring(0, 100);
+        }
+        return;
+      }
+
+      // 2. Run animation with random outcome
+      const finalIcons = [randomIcon(), randomIcon(), randomIcon()];
+      doSpinAnimation(finalIcons, () => {
+        // After animation: check win
+        const allSame = finalIcons[0] === finalIcons[1] && finalIcons[1] === finalIcons[2];
+
+        if (allSame) {
+          handleWin(ICONS[finalIcons[0]]);
+        } else {
+          finishSpin(false);
+        }
+      });
+    }
+
+    // ═══════════════════════════════════════
+    // 🎰 SPIN — Free play
+    // ═══════════════════════════════════════
+    function spinFree() {
+      spinning = true;
+      btnSpin.disabled = true;
+      btnSpin.textContent = '🎰 GIRANDO...';
+      slotResult.className = 'slot-result';
+      slotResult.innerHTML = '';
+      reelBoxes.forEach(b => b.classList.remove('win'));
+
+      const finalIcons = [randomIcon(), randomIcon(), randomIcon()];
+      doSpinAnimation(finalIcons, () => {
+        const allSame = finalIcons[0] === finalIcons[1] && finalIcons[1] === finalIcons[2];
+        if (allSame) {
+          const icon = ICONS[finalIcons[0]];
+          soundWin.currentTime = 0;
+          soundWin.play().catch(() => {});
+          reelBoxes.forEach(b => b.classList.add('win'));
+          slotResult.className = 'slot-result win-show';
+          slotResult.innerHTML =
+            `🎉 ¡${icon.name} x3! <span class="multiplier">x${icon.multiplier} (prueba)</span>`;
+        }
+        finishSpin(false);
+      });
+    }
+
+    // ═══════════════════════════════════════
+    // 🎰 Animation engine
+    // ═══════════════════════════════════════
+    function doSpinAnimation(finalIcons, onComplete) {
+      soundSpin.currentTime = 0;
+      soundSpin.play().catch(() => {});
+
+      const intervals = [];
+      for (let i = 0; i < 3; i++) {
+        intervals[i] = setInterval(() => {
+          reelImgs[i].src = ICONS[randomIcon()].file;
+        }, 60);
+        reelBoxes[i].classList.add('spinning');
+      }
+
+      const stopDelays = [600, 1000, 1400];
+      stopDelays.forEach((delay, idx) => {
+        setTimeout(() => {
+          clearInterval(intervals[idx]);
+          reelBoxes[idx].classList.remove('spinning');
+          reelImgs[idx].src = ICONS[finalIcons[idx]].file;
+
+          if (idx === 2) {
+            setTimeout(onComplete, 200);
+          }
+        }, delay);
+      });
+    }
+
+    function randomIcon() {
+      return Math.floor(Math.random() * ICONS.length);
+    }
+
+    // ═══════════════════════════════════════
+    // 🏆 WIN: Pay prize via backend
+    // ═══════════════════════════════════════
+    async function handleWin(icon) {
+      const prizeRaw = BET_RAW * icon.multiplier;
+      soundWin.currentTime = 0;
+      soundWin.play().catch(() => {});
+      reelBoxes.forEach(b => b.classList.add('win'));
+
+      // Call backend to pay prize
+      try {
+        slotResult.className = 'slot-result';
+        slotResult.innerHTML = '💰 Pagando premio...';
+
+        const resp = await fetch(BACKEND_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            player: walletPublicKey.toString(),
+            amount: prizeRaw
+          })
+        });
+
+        const data = await resp.json();
+
+        if (data.success) {
+          playerBalanceRaw += prizeRaw;
+          updateBalanceDisplay();
+          slotResult.className = 'slot-result win-show';
+          slotResult.innerHTML =
+            `🎉 ¡${icon.name} x3! <span class="multiplier">GANASTE ${icon.multiplier} CERDOS</span>` +
+            `<span class="tx-link">Tx: ${data.signature.substring(0, 20)}...</span>`;
+        } else {
+          // Backend error — store pending
+          slotResult.className = 'slot-result error-show';
+          slotResult.innerHTML =
+            `⚠️ ¡Ganaste ${icon.multiplier} CERDOS pero el pago falló!<br>` +
+            `<small>El premio está pendiente. Avisale a Miguel.</small>`;
+        }
+      } catch (err) {
+        console.error('Backend error:', err);
+        slotResult.className = 'slot-result error-show';
+        slotResult.innerHTML =
+          `⚠️ ¡Ganaste ${icon.multiplier} CERDOS!<br>` +
+          `<small>Error de conexión. Premio pendiente, avisale a Miguel.</small>`;
+      }
+
+      finishSpin(true);
+    }
+
+    function finishSpin(wasWin) {
+      spinning = false;
+      btnSpin.disabled = false;
+      soundSpin.pause();
+      soundSpin.currentTime = 0;
+
+      if (walletPublicKey && playerBalanceRaw >= BET_RAW) {
+        btnSpin.textContent = '🎰 GIRAR 1 CERDO';
+      } else if (walletPublicKey) {
+        btnSpin.textContent = '🎰 SIN SALDO';
+        btnSpin.disabled = true;
+      } else {
+        btnSpin.textContent = '🎰 GIRAR (prueba)';
+      }
+    }
+
+    // ═══════════════════════════════════════
+    // Auto-connect on load
+    // ═══════════════════════════════════════
     window.addEventListener('load', () => {
       const provider = getProvider();
       if (provider) {
@@ -529,120 +677,8 @@
           if (walletPublicKey) disconnectWallet();
         });
       }
+      setRealMode(false);
     });
-
-    // ═══════════════════════════════════════
-    // 🎰 TRAGAMONEDAS
-    // ═══════════════════════════════════════
-    const ICONS = [
-      { name: 'Mojarra', file: 'mojarra_x1.jpg', multiplier: 1 },
-      { name: 'Tiburón', file: 'tiburon_x10.jpg', multiplier: 5 },
-      { name: 'Ballena', file: 'ballena_x30.jpg', multiplier: 15 },
-      { name: 'Cerdo',   file: 'cerdo_x100.jpg', multiplier: 40 }
-    ];
-
-    const reelImgs = [
-      document.getElementById('img0'),
-      document.getElementById('img1'),
-      document.getElementById('img2')
-    ];
-    const reelBoxes = [
-      document.getElementById('reel0'),
-      document.getElementById('reel1'),
-      document.getElementById('reel2')
-    ];
-    const btnSpin = document.getElementById('btnSpin');
-    const slotResult = document.getElementById('slotResult');
-    const soundSpin = document.getElementById('soundSpin');
-    const soundWin = document.getElementById('soundWin');
-
-    let spinning = false;
-    let currentIcons = [0, 0, 0]; // indices into ICONS
-
-    function randomIcon() {
-      return Math.floor(Math.random() * ICONS.length);
-    }
-
-    function setReelImage(reelIdx, iconIdx) {
-      reelImgs[reelIdx].src = ICONS[iconIdx].file;
-    }
-
-    function spin() {
-      if (spinning) return;
-      spinning = true;
-
-      // Reset UI
-      slotResult.className = 'slot-result';
-      slotResult.innerHTML = '';
-      reelBoxes.forEach(b => b.classList.remove('win'));
-      btnSpin.disabled = true;
-      btnSpin.textContent = '🎰 GIRANDO...';
-
-      // Play spin sound
-      soundSpin.currentTime = 0;
-      soundSpin.play().catch(() => {});
-
-      // Final results (random)
-      const finalIcons = [randomIcon(), randomIcon(), randomIcon()];
-
-      // Start all 3 reels spinning
-      const intervals = [];
-      for (let i = 0; i < 3; i++) {
-        intervals[i] = setInterval(() => {
-          setReelImage(i, randomIcon());
-        }, 60);
-        reelBoxes[i].classList.add('spinning');
-      }
-
-      // Stop reels one by one with delays
-      const stopDelays = [600, 1000, 1400]; // ms
-
-      stopDelays.forEach((delay, reelIdx) => {
-        setTimeout(() => {
-          clearInterval(intervals[reelIdx]);
-          reelBoxes[reelIdx].classList.remove('spinning');
-          currentIcons[reelIdx] = finalIcons[reelIdx];
-          setReelImage(reelIdx, finalIcons[reelIdx]);
-
-          // Check if all 3 have stopped (last reel)
-          if (reelIdx === 2) {
-            setTimeout(() => checkWin(finalIcons), 200);
-          }
-        }, delay);
-      });
-    }
-
-    function checkWin(finalIcons) {
-      spinning = false;
-      btnSpin.disabled = false;
-      btnSpin.textContent = '🎰 GIRAR';
-
-      // Stop spin sound
-      soundSpin.pause();
-      soundSpin.currentTime = 0;
-
-      const allSame = finalIcons[0] === finalIcons[1] && finalIcons[1] === finalIcons[2];
-
-      if (allSame) {
-        // 🎉 WIN!
-        const icon = ICONS[finalIcons[0]];
-        soundWin.currentTime = 0;
-        soundWin.play().catch(() => {});
-
-        // Flash all reels
-        reelBoxes.forEach(b => b.classList.add('win'));
-
-        slotResult.className = 'slot-result win-show';
-        slotResult.innerHTML = `
-          🎉 ¡${icon.name} x3!
-          <span class="multiplier">GANASTE x${icon.multiplier}</span>
-        `;
-      } else {
-        // No mostrar nada al perder
-        slotResult.className = 'slot-result';
-        slotResult.innerHTML = '';
-      }
-    }
   </script>
 </body>
 </html>
