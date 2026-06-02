@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>🐷 Cerdos App</title>
   <script src="https://unpkg.com/@solana/web3.js@1.91.7/lib/index.iife.min.js"></script>
-  <script src="https://unpkg.com/@solana/spl-token@0.4.6/lib/index.iife.min.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -198,7 +197,7 @@
     <!-- ═══════════ Wallet Card ═══════════ -->
     <div class="card">
       <img class="logo-img" src="logo-cerdos.jpg" alt="Cerdos Logo">
-      <h1>Cerdos App</h1>
+      <h1>Cerdos App <span style="font-size:14px;color:#666;">v1.8</span></h1>
       <p class="subtitle">¿Eres un cerdo especulador?</p>
 
       <button id="btnConnect" class="btn-connect" onclick="connectWallet()">
@@ -261,8 +260,8 @@
     const CERDOS_MINT = new solanaWeb3.PublicKey('CqJ5xawaraBqH5VPSQaCk7Dfei3aju3ry2UxfWkoGdKm');
     const CERDOS_DECIMALS = 2;
     const HOUSE_ATA = new solanaWeb3.PublicKey('3ZysztEMT6XBByJLHzUfGu1D5gDqV5Krg1YKJSDLf1zz');
-    const RPC_URL = 'https://mainnet.helius-rpc.com/?api-key=ef809e99-6099-412a-b731-3ce2cba78008';
     const BACKEND_URL = 'https://convinced-filed-success-defined.trycloudflare.com/pagar';
+    const RPC_URL = BACKEND_URL.replace('/pagar', '/rpc');  // Proxy via backend (evita CORS)
     const BET_RAW = 100;  // 1 CERDO = 100 raw
 
     const ICONS = [
@@ -281,6 +280,40 @@
     let playerBalanceRaw = 0;  // raw units
     let playerATA = null;
     let spinning = false;
+
+    // ═══════════════════════════════════════
+    // HELPERS (reemplazan splToken CDN)
+    // ═══════════════════════════════════════
+    const TOKEN_PROG_ID = new solanaWeb3.PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA');
+    const ATA_PROG_ID = new solanaWeb3.PublicKey('ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL');
+
+    function deriveATA(mint, owner) {
+      const [ata] = solanaWeb3.PublicKey.findProgramAddressSync(
+        [owner.toBuffer(), TOKEN_PROG_ID.toBuffer(), mint.toBuffer()],
+        ATA_PROG_ID
+      );
+      return ata;
+    }
+
+    function b64decode(b64) { const bin = atob(b64); const bytes = new Uint8Array(bin.length); for (let i=0; i<bin.length; i++) bytes[i] = bin.charCodeAt(i); return bytes; }
+    function b64encode(bytes) { let bin = ''; for (let i=0; i<bytes.length; i++) bin += String.fromCharCode(bytes[i]); return btoa(bin); }
+
+    function createTransferIx(source, dest, owner, amount) {
+      // SPL Token: Transfer (instruction index = 3)
+      const data = new Uint8Array(9);
+      const view = new DataView(data.buffer);
+      view.setUint8(0, 3);  // instruction index
+      view.setBigUint64(1, BigInt(amount), true);  // little-endian
+      return new solanaWeb3.TransactionInstruction({
+        programId: TOKEN_PROG_ID,
+        keys: [
+          { pubkey: source, isSigner: false, isWritable: true },
+          { pubkey: dest, isSigner: false, isWritable: true },
+          { pubkey: owner, isSigner: true, isWritable: false },
+        ],
+        data: data,
+      });
+    }
 
     // ═══════════════════════════════════════
     // DOM refs
@@ -374,16 +407,16 @@
     async function verifyBalance() {
       try {
         btnConnect.innerHTML = '<span class="loading"></span>Verificando cerdos...';
-        connection = new solanaWeb3.Connection(RPC_URL, 'confirmed');
 
-        const tokenAccounts = await connection.getParsedTokenAccountsByOwner(walletPublicKey, { mint: CERDOS_MINT });
-        playerBalanceRaw = 0;
-        for (const acc of tokenAccounts.value) {
-          playerBalanceRaw += Number(acc.account.data.parsed.info.tokenAmount.amount);
-        }
+        // Usar endpoint server-side (evita CORS y problemas del browser Phantom)
+        const balResp = await fetch(BACKEND_URL.replace('/pagar', '/balance') + '?wallet=' + walletPublicKey.toString());
+        const balData = await balResp.json();
+        if (balData.error) throw new Error(balData.error);
+
+        playerBalanceRaw = balData.balance || 0;
 
         // Derive player's ATA
-        playerATA = splToken.getAssociatedTokenAddressSync(CERDOS_MINT, walletPublicKey);
+        playerATA = deriveATA(CERDOS_MINT, walletPublicKey);
 
         btnConnect.style.display = 'none';
 
@@ -410,6 +443,14 @@
         const failMsg = resultFail.querySelector('p');
         failTitle.textContent = '⚠️ Error de conexión';
         failMsg.textContent = 'No se pudo verificar el balance. Reintentá.';
+        const errDetail = document.createElement('p');
+        errDetail.style.cssText = 'color:#FF2D95;font-size:10px;margin-top:6px;word-break:break-all;opacity:0.7;';
+        errDetail.id = 'errDetail';
+        errDetail.textContent = (err.message || String(err)).substring(0, 200);
+        // Remove old detail if exists
+        const old = document.getElementById('errDetail');
+        if (old) old.remove();
+        resultFail.appendChild(errDetail);
         let retryBtn = document.getElementById('retryBtn');
         if (!retryBtn) {
           retryBtn = document.createElement('button');
@@ -468,52 +509,68 @@
     }
 
     // ═══════════════════════════════════════
-    // 🎰 SPIN — Real (cobra 1 CERDO)
+    // 🎰 SPIN — Real: backend maneja envío de tx y pago
     // ═══════════════════════════════════════
     async function spinReal() {
       spinning = true;
       btnSpin.disabled = true;
-      btnSpin.textContent = '⏳ Aprobá en Phantom...';
+      btnSpin.textContent = '⏳ Preparando...';
       slotResult.className = 'slot-result';
       slotResult.innerHTML = '';
       reelBoxes.forEach(b => b.classList.remove('win'));
 
-      // 1. Build and send transfer
       try {
-        const transferIx = splToken.createTransferInstruction(
-          playerATA, HOUSE_ATA, walletPublicKey, BET_RAW
-        );
+        // 1. Pedir al backend que prepare la jugada
+        const jugarResp = await fetch(BACKEND_URL.replace('/pagar', '/jugar'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ player: walletPublicKey.toString() })
+        });
+        const jugarData = await jugarResp.json();
+        if (!jugarData.success) throw new Error(jugarData.error || 'Error al preparar jugada');
 
-        const { blockhash } = await connection.getLatestBlockhash('confirmed');
-        const tx = new solanaWeb3.Transaction({
-          recentBlockhash: blockhash,
-          feePayer: walletPublicKey
-        }).add(transferIx);
-
-        // Player signs via Phantom
+        // 2. Firmar la tx de apuesta con Phantom
         btnSpin.textContent = '✍️ Firmá en Phantom...';
+        const tx = solanaWeb3.Transaction.from(b64decode(jugarData.tx));
         const signedTx = await currentProvider.signTransaction(tx);
 
-        // Send
+        // 3. Enviar tx firmada al backend para que la mande
         btnSpin.textContent = '📡 Enviando...';
-        const sig = await connection.sendRawTransaction(signedTx.serialize(), {
-          skipPreflight: false,
-          preflightCommitment: 'confirmed'
+        const confResp = await fetch(BACKEND_URL.replace('/pagar', '/confirmar'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            player: walletPublicKey.toString(),
+            signedTx: b64encode(signedTx.serialize()),
+            icons: jugarData.icons
+          })
         });
+        const confData = await confResp.json();
+        if (!confData.success) throw new Error(confData.error || 'Error al confirmar');
 
-        // Wait for confirmation
-        const confirmation = await connection.confirmTransaction(sig, 'confirmed');
-        if (confirmation.value.err) {
-          throw new Error('Transaction failed: ' + JSON.stringify(confirmation.value.err));
-        }
-
-        // ✅ Bet paid! Update balance
+        // Bet cobrado
         playerBalanceRaw -= BET_RAW;
+        if (confData.win) playerBalanceRaw += confData.prizeRaw;
         updateBalanceDisplay();
         btnSpin.textContent = '🎰 GIRANDO...';
 
+        // 4. Animación con el resultado que ya sabemos
+        const finalIcons = confData.icons;
+        doSpinAnimation(finalIcons, () => {
+          if (confData.win) {
+            const icon = ICONS[finalIcons[0]];
+            playSound(soundWin);
+            reelBoxes.forEach(b => b.classList.add('win'));
+            slotResult.className = 'slot-result win-show';
+            slotResult.innerHTML =
+              `🎉 ¡${icon.name} x3! <span class="multiplier">GANASTE ${icon.multiplier} CERDOS</span>` +
+              `<span class="tx-link">Tx: ${confData.prizeSig ? confData.prizeSig.substring(0, 20) : confData.betSig.substring(0, 20)}...</span>`;
+          }
+          finishSpin(confData.win);
+        });
+
       } catch (err) {
-        console.error('Transfer error:', err);
+        console.error('Spin error:', err);
         spinning = false;
         btnSpin.disabled = false;
         btnSpin.textContent = '🎰 GIRAR 1 CERDO';
@@ -524,21 +581,7 @@
           slotResult.className = 'slot-result error-show';
           slotResult.innerHTML = '❌ Error: ' + (err.message || 'Transacción falló').substring(0, 100);
         }
-        return;
       }
-
-      // 2. Run animation with random outcome
-      const finalIcons = [randomIcon(), randomIcon(), randomIcon()];
-      doSpinAnimation(finalIcons, () => {
-        // After animation: check win
-        const allSame = finalIcons[0] === finalIcons[1] && finalIcons[1] === finalIcons[2];
-
-        if (allSame) {
-          handleWin(ICONS[finalIcons[0]]);
-        } else {
-          finishSpin(false);
-        }
-      });
     }
 
     // ═══════════════════════════════════════
@@ -557,8 +600,7 @@
         const allSame = finalIcons[0] === finalIcons[1] && finalIcons[1] === finalIcons[2];
         if (allSame) {
           const icon = ICONS[finalIcons[0]];
-          soundWin.currentTime = 0;
-          soundWin.play().catch(() => {});
+          playSound(soundWin);
           reelBoxes.forEach(b => b.classList.add('win'));
           slotResult.className = 'slot-result win-show';
           slotResult.innerHTML =
@@ -572,8 +614,10 @@
     // 🎰 Animation engine
     // ═══════════════════════════════════════
     function doSpinAnimation(finalIcons, onComplete) {
-      soundSpin.currentTime = 0;
-      soundSpin.play().catch(() => {});
+      playSound(soundSpin);
+      // Desbloquear win sound ahora (browser solo autoriza audio durante user gesture)
+      soundWin.volume = 0.001;
+      soundWin.play().then(() => { soundWin.pause(); soundWin.currentTime = 0; soundWin.volume = 1.0; }).catch(() => {});
 
       const intervals = [];
       for (let i = 0; i < 3; i++) {
@@ -606,8 +650,7 @@
     // ═══════════════════════════════════════
     async function handleWin(icon) {
       const prizeRaw = BET_RAW * icon.multiplier;
-      soundWin.currentTime = 0;
-      soundWin.play().catch(() => {});
+      playSound(soundWin);
       reelBoxes.forEach(b => b.classList.add('win'));
 
       // Call backend to pay prize
@@ -638,7 +681,7 @@
           slotResult.className = 'slot-result error-show';
           slotResult.innerHTML =
             `⚠️ ¡Ganaste ${icon.multiplier} CERDOS pero el pago falló!<br>` +
-            `<small>El premio está pendiente. Avisale a Miguel.</small>`;
+            `<small>${data.error || 'Error desconocido'}</small>`;
         }
       } catch (err) {
         console.error('Backend error:', err);
@@ -671,6 +714,8 @@
     // Auto-connect on load
     // ═══════════════════════════════════════
     window.addEventListener('load', () => {
+      // Precargar audios (el browser Phantom puede bloquear autoplay)
+      [soundSpin, soundWin].forEach(a => { a.load(); a.volume = 1.0; });
       const provider = getProvider();
       if (provider) {
         provider.on('accountChanged', () => {
@@ -679,6 +724,16 @@
       }
       setRealMode(false);
     });
+
+    // Helper: reproducir sonido de forma segura
+    function playSound(audio) {
+      audio.currentTime = 0;
+      audio.play().catch(() => {
+        // Si falla, reintentar con load
+        audio.load();
+        setTimeout(() => audio.play().catch(() => {}), 100);
+      });
+    }
   </script>
 </body>
 </html>
