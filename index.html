@@ -639,9 +639,9 @@
           <span class="multiplier">GANASTE x${icon.multiplier}</span>
         `;
       } else {
-        slotResult.className = 'slot-result lose-show';
-        const names = finalIcons.map(i => ICONS[i].name).join(' | ');
-        slotResult.innerHTML = `${names}<br><small style="opacity:0.7">¡Seguí intentando!</small>`;
+        // No mostrar nada al perder
+        slotResult.className = 'slot-result';
+        slotResult.innerHTML = '';
       }
     }
   </script>
